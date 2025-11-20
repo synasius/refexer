@@ -1,4 +1,9 @@
+mod other;
+mod synth;
+
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+
+use crate::synth::{Synth, WaveType};
 
 fn main() -> anyhow::Result<()> {
     let stream = stream_setup()?;
@@ -53,20 +58,15 @@ where
     let sample_rate = config.sample_rate.0 as f32;
     let channels = config.channels as usize;
 
-    // Produce a sinusoid of maximum amplitude.
-    let mut sample_clock = 0f32;
-    let mut next_value = move || {
-        sample_clock = (sample_clock + 1.0) % sample_rate;
-        (sample_clock * 440.0 * 2.0 * std::f32::consts::PI / sample_rate).sin()
-    };
+    let mut synth = Synth::new();
+    synth.p_base_freq = 0.3;
+    synth.play_sample();
 
     let err_fn = |err| eprintln!("an error occurred on stream: {err}");
 
     let stream = device.build_output_stream(
         config,
-        move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
-            write_data(data, channels, &mut next_value)
-        },
+        move |data: &mut [T], _: &cpal::OutputCallbackInfo| write_data(data, channels, &mut synth),
         err_fn,
         None,
     )?;
@@ -74,12 +74,20 @@ where
     Ok(stream)
 }
 
-fn write_data<T>(output: &mut [T], channels: usize, next_sample: &mut dyn FnMut() -> f32)
+fn write_data<T>(output: &mut [T], channels: usize, synth: &mut Synth)
 where
     T: cpal::Sample + cpal::FromSample<f32>,
 {
-    for frame in output.chunks_mut(channels) {
-        let value: T = T::from_sample(next_sample());
+    let length = output.len() / channels;
+    let mut buffer = vec![0.0f32; length];
+
+    synth.synth_sample(length, &mut buffer);
+
+    for (i, frame) in output.chunks_mut(channels).enumerate() {
+        let value = buffer[i];
+        println!("value {value}");
+
+        let value: T = T::from_sample(buffer[i]);
         for sample in frame.iter_mut() {
             *sample = value;
         }
