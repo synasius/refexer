@@ -1,9 +1,9 @@
-mod other;
 mod synth;
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
-use crate::synth::{Synth, WaveType};
+use synth::Synth;
+use synth::params::SynthParams;
 
 fn main() -> anyhow::Result<()> {
     let stream = stream_setup()?;
@@ -58,8 +58,9 @@ where
     let sample_rate = config.sample_rate.0 as f32;
     let channels = config.channels as usize;
 
-    let mut synth = Synth::new();
-    synth.p_base_freq = 0.3;
+    let mut params = SynthParams::default();
+    params.p_base_freq = 0.3;
+    let mut synth = Synth::new(params);
     synth.play_sample();
 
     let err_fn = |err| eprintln!("an error occurred on stream: {err}");

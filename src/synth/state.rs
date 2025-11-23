@@ -1,5 +1,5 @@
 #[derive(Default)]
-pub struct Other {
+pub struct SynthState {
     pub playing_sample: bool,
     pub phase: i32,
     pub rep_time: i32,
