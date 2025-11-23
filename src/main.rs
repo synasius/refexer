@@ -60,6 +60,8 @@ where
 
     let mut params = SynthParams::default();
     params.p_base_freq = 0.3;
+    // params.p_arp_mod = -0.6;
+    // params.p_arp_speed = 0.9;
     let mut synth = Synth::new(params);
     synth.play_sample();
 

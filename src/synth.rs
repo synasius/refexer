@@ -52,7 +52,43 @@ impl Synth {
                 self.reset_sample(true);
             }
 
-            // TODO:
+            // frequency envelopes/arpeggios
+            self.state.arp_time += 1;
+            if self.state.arp_limit != 0 && self.state.arp_time >= self.state.arp_limit {
+                self.state.arp_limit = 0;
+                self.state.fperiod *= self.state.arp_mod;
+            }
+
+            self.state.fslide += self.state.fdslide;
+            self.state.fperiod *= self.state.fslide;
+            if self.state.fperiod > self.state.fmaxperiod {
+                self.state.fperiod = self.state.fmaxperiod;
+
+                if self.params.p_freq_limit > 0.0 {
+                    self.state.playing_sample = false;
+                }
+            }
+            let mut rfperiod = self.state.fperiod as f32;
+            if self.state.vib_amp > 0.0 {
+                self.state.vib_phase += self.state.vib_speed;
+                rfperiod = self.state.fperiod as f32
+                    * (1.0 + self.state.vib_phase.sin() * self.state.vib_amp);
+            }
+
+            self.state.period = rfperiod as i32;
+            if self.state.period < 8 {
+                self.state.period = 8;
+            }
+            self.state.square_duty += self.state.square_slide;
+            if self.state.square_duty < 0.0 {
+                self.state.square_duty = 0.0
+            }
+            if self.state.square_duty > 0.5 {
+                self.state.square_duty = 0.5
+            }
+
+            // TODO: volume envelope
+            // TODO: phaser step
 
             let mut ssample: f32 = 0.0;
             // 8x supersampling
@@ -64,7 +100,7 @@ impl Synth {
                     self.state.phase %= self.state.period;
                     if let WaveType::Noise = self.params.wave_type {
                         for i in 0..32 {
-                            // noise_buffer[i]=frnd(2.0f)-1.0f;
+                            self.state.noise_buffer[i] = self.rng.random::<f32>() * 2.0 - 1.0;
                         }
                     }
                 }
@@ -115,15 +151,74 @@ impl Synth {
         if !restart {
             self.state.phase = 0;
         }
-        self.state.fperiod =
-            100.0 as f64 / (self.params.p_base_freq * self.params.p_base_freq + 0.001) as f64;
+
+        self.state.fperiod = 100.0 / ((self.params.p_base_freq as f64).powf(2.0) + 0.001);
         self.state.period = self.state.fperiod as i32;
-        // TODO: other stuff
+
+        self.state.fmaxperiod = 100.0 / ((self.params.p_freq_limit as f64).powf(2.0) + 0.001);
+        self.state.fslide = 1.0 - (self.params.p_freq_ramp as f64).powf(3.0) * 0.01;
+        self.state.fdslide = -(self.params.p_freq_ramp as f64).powf(3.0) * 0.000001;
+
         self.state.square_duty = 0.5 - self.params.p_duty * 0.5;
-        // TODO
+        self.state.square_slide = -self.params.p_duty_ramp * 0.00005;
+
+        if self.params.p_arp_mod >= 0.0 {
+            self.state.arp_mod = 1.0 - (self.params.p_arp_mod as f64).powf(2.0) * 0.9;
+        } else {
+            self.state.arp_mod = 1.0 + (self.params.p_arp_mod as f64).powf(2.0) * 10.0;
+        }
+
+        self.state.arp_time = 0;
+        self.state.arp_limit = ((1.0 - self.params.p_arp_speed).powf(2.0) * 20_000.0 + 32.0) as i32;
+        if self.params.p_arp_speed == 1.0 {
+            self.state.arp_limit = 0;
+        }
 
         if !restart {
-            // TODO: other stuff
+            self.state.fltp = 0.0;
+            self.state.fltdp = 0.0;
+            self.state.fltw = self.params.p_lpf_freq.powf(3.0) * 0.1;
+            self.state.fltw_d = 1.0 + self.params.p_lpf_ramp * 0.0001;
+            self.state.fltdmp = 5.0 / (1.0 + self.params.p_lpf_resonance.powf(2.0) * 20.0)
+                * (0.01 + self.state.fltw);
+            if self.state.fltdmp > 0.8 {
+                self.state.fltdmp = 0.8;
+            }
+
+            self.state.fltphp = 0.0;
+            self.state.flthp = self.params.p_hpf_freq.powf(2.0) * 0.1;
+            self.state.flthp_d = 1.0 + self.params.p_hpf_ramp * 0.0003;
+
+            // reset vibrato
+            self.state.vib_phase = 0.0;
+            self.state.vib_speed = self.params.p_vib_speed.powf(2.0) * 0.01;
+            self.state.vib_amp = self.params.p_vib_strength * 0.5;
+
+            // reset envelope
+            self.state.env_vol = 0.0;
+            self.state.env_stage = 0;
+            self.state.env_time = 0;
+            self.state.env_length[0] = (self.params.p_env_attack.powf(2.0) * 100000.0) as i32;
+            self.state.env_length[1] = (self.params.p_env_sustain.powf(2.0) * 100000.0) as i32;
+            self.state.env_length[2] = (self.params.p_env_decay.powf(2.0) * 100000.0) as i32;
+
+            self.state.fphase = self.params.p_pha_offset.powf(2.0) * 1020.0;
+            if self.params.p_pha_offset < 0.0 {
+                self.state.fphase = -self.state.fphase;
+            }
+            self.state.fdphase = self.params.p_pha_ramp.powf(2.0) * 1.0;
+            if self.params.p_pha_ramp < 0.0 {
+                self.state.fdphase = -self.state.fdphase;
+            }
+            self.state.iphase = self.state.fphase.abs() as i32;
+            self.state.ipp = 0;
+            for i in 0..1024 {
+                self.state.phaser_buffer[i] = 0.0;
+            }
+
+            for i in 0..32 {
+                self.state.noise_buffer[i] = self.rng.random::<f32>() * 2.0 - 1.0;
+            }
 
             self.state.rep_time = 0;
             self.state.rep_limit =
