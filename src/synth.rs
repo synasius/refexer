@@ -1,4 +1,5 @@
 pub mod params;
+pub mod presets;
 mod state;
 
 use params::{SynthParams, WaveType};
@@ -41,7 +42,7 @@ impl Synth {
     }
 
     pub fn synth_sample(&mut self, length: usize, buffer: &mut [f32]) {
-        for i in 0..length {
+        for item in buffer.iter_mut().take(length) {
             if !self.state.playing_sample {
                 break;
             }
@@ -80,20 +81,53 @@ impl Synth {
                 self.state.period = 8;
             }
             self.state.square_duty += self.state.square_slide;
-            if self.state.square_duty < 0.0 {
-                self.state.square_duty = 0.0
-            }
-            if self.state.square_duty > 0.5 {
-                self.state.square_duty = 0.5
+            self.state.square_duty = self.state.square_duty.clamp(0.0, 0.5);
+
+            // volume envelope
+            self.state.env_time += 1;
+            if self.state.env_time > self.state.env_length[self.state.env_stage as usize] {
+                self.state.env_time = 0;
+                self.state.env_stage += 1;
+                if self.state.env_stage == 3 {
+                    self.state.playing_sample = false;
+                }
             }
 
-            // TODO: volume envelope
-            // TODO: phaser step
+            match self.state.env_stage {
+                0 => {
+                    self.state.env_vol =
+                        self.state.env_time as f32 / self.state.env_length[0] as f32;
+                }
+                1 => {
+                    self.state.env_vol = 1.0
+                        + (1.0 - self.state.env_time as f32 / self.state.env_length[1] as f32)
+                            * 2.0
+                            * self.params.p_env_punch
+                }
+                2 => {
+                    self.state.env_vol =
+                        1.0 - self.state.env_time as f32 / self.state.env_length[2] as f32
+                }
+                _ => {}
+            }
+
+            // phaser step
+            self.state.fphase += self.state.fdphase;
+            self.state.iphase = (self.state.fphase as i32).abs();
+            if self.state.iphase > 1023 {
+                self.state.iphase = 1023
+            }
+
+            if self.state.flthp_d != 0.0 {
+                self.state.flthp *= self.state.flthp_d;
+
+                self.state.flthp = self.state.flthp.clamp(0.00001, 0.1);
+            }
 
             let mut ssample: f32 = 0.0;
             // 8x supersampling
             for _si in 0..8 {
-                let mut sample: f32 = 0.0;
+                // let mut sample: f32 = 0.0;
                 self.state.phase += 1;
 
                 if self.state.phase >= self.state.period {
@@ -107,43 +141,67 @@ impl Synth {
 
                 // base waveform
                 let fp = self.state.phase as f32 / self.state.period as f32;
-                match self.params.wave_type {
-                    WaveType::Sine => {
-                        sample = (fp * TWO_PI).sin();
-                    }
+                let mut sample = match self.params.wave_type {
+                    WaveType::Sine => (fp * TWO_PI).sin(),
                     WaveType::Square => {
                         if fp < self.state.square_duty {
-                            sample = 0.5;
+                            0.5
                         } else {
-                            sample = -0.5;
+                            -0.5
                         }
                     }
-                    WaveType::Sawtooth => {
-                        sample = 1.0 - fp * 2.0;
-                    }
+                    WaveType::Sawtooth => 1.0 - fp * 2.0,
                     WaveType::Noise => {
-                        // sample=noise_buffer[phase*32/period];
+                        let index = self.state.phase * 32 / self.state.period;
+                        self.state.noise_buffer[index as usize]
                     }
-                }
-                // TODO: lp filter
-                // TODO: hp filter
-                // TODO: phaser
+                };
 
-                // TODO: envelop application
-                ssample += sample;
+                // lp filter
+                let pp = self.state.fltp;
+                self.state.fltw *= self.state.fltw_d;
+                if self.state.fltw < 0.0 {
+                    self.state.fltw = 0.0;
+                }
+                if self.state.fltw > 0.1 {
+                    self.state.fltw = 0.1;
+                };
+                self.state.fltw = self.state.fltw.clamp(0.0, 1.0);
+
+                if self.params.p_lpf_freq != 1.0 {
+                    self.state.fltdp += (sample - self.state.fltp) * self.state.fltw;
+                    self.state.fltdp -= self.state.fltdp * self.state.fltdmp;
+                } else {
+                    self.state.fltp = sample;
+                    self.state.fltdp = 0.0;
+                }
+                self.state.fltp += self.state.fltdp;
+
+                // hp filter
+
+                self.state.fltphp += self.state.fltp - pp;
+                self.state.fltphp -= self.state.fltphp * self.state.flthp;
+                sample = self.state.fltphp;
+
+                // phaser
+                let index = (self.state.ipp & 1023) as usize;
+                self.state.phaser_buffer[index] = sample;
+
+                let index = ((self.state.ipp - self.state.iphase + 1024) & 1023) as usize;
+                sample += self.state.phaser_buffer[index];
+
+                self.state.ipp = (self.state.ipp + 1) & 1023;
+
+                // envelop application
+                ssample += sample * self.state.env_vol;
             }
 
             ssample = ssample / 8.0 * self.master_vol;
             ssample *= 2.0 * self.sound_vol;
+            ssample = ssample.clamp(-1.0, 1.0);
 
-            if ssample > 1.0 {
-                ssample = 1.0;
-            }
-            if ssample < -1.0 {
-                ssample = -1.0
-            }
-
-            buffer[i] = ssample;
+            // assign the computed sample
+            *item = ssample;
         }
     }
 

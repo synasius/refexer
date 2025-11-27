@@ -3,7 +3,7 @@ mod synth;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
 use synth::Synth;
-use synth::params::SynthParams;
+use synth::presets::coin_params;
 
 fn main() -> anyhow::Result<()> {
     let stream = stream_setup()?;
@@ -55,13 +55,10 @@ fn make_stream<T>(
 where
     T: cpal::SizedSample + cpal::FromSample<f32>,
 {
-    let sample_rate = config.sample_rate.0 as f32;
+    // let sample_rate = config.sample_rate.0 as f32;
     let channels = config.channels as usize;
 
-    let mut params = SynthParams::default();
-    params.p_base_freq = 0.3;
-    // params.p_arp_mod = -0.6;
-    // params.p_arp_speed = 0.9;
+    let params = coin_params();
     let mut synth = Synth::new(params);
     synth.play_sample();
 
