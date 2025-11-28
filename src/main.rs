@@ -78,16 +78,10 @@ fn write_data<T>(output: &mut [T], channels: usize, synth: &mut Synth)
 where
     T: cpal::Sample + cpal::FromSample<f32>,
 {
-    let length = output.len() / channels;
-    let mut buffer = vec![0.0f32; length];
+    for frame in output.chunks_mut(channels) {
+        let value = synth.synth_sample().unwrap_or(0.0);
 
-    synth.synth_sample(length, &mut buffer);
-
-    for (i, frame) in output.chunks_mut(channels).enumerate() {
-        let value = buffer[i];
-        println!("value {value}");
-
-        let value: T = T::from_sample(buffer[i]);
+        let value: T = T::from_sample(value);
         for sample in frame.iter_mut() {
             *sample = value;
         }
