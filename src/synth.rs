@@ -158,13 +158,7 @@ impl Synth {
             // lp filter
             let pp = self.state.fltp;
             self.state.fltw *= self.state.fltw_d;
-            if self.state.fltw < 0.0 {
-                self.state.fltw = 0.0;
-            }
-            if self.state.fltw > 0.1 {
-                self.state.fltw = 0.1;
-            };
-            self.state.fltw = self.state.fltw.clamp(0.0, 1.0);
+            self.state.fltw = self.state.fltw.clamp(0.0, 0.1);
 
             if self.params.p_lpf_freq != 1.0 {
                 self.state.fltdp += (sample - self.state.fltp) * self.state.fltw;
