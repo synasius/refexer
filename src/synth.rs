@@ -2,12 +2,12 @@ pub mod params;
 pub mod presets;
 mod state;
 
+use std::f32::consts::TAU;
+
 use params::{SynthParams, WaveType};
 use state::SynthState;
 
 use rand::prelude::*;
-
-const TWO_PI: f32 = 2.0 * std::f32::consts::PI;
 
 pub struct Synth {
     params: SynthParams,
@@ -140,7 +140,7 @@ impl Synth {
             // base waveform
             let fp = self.state.phase as f32 / self.state.period as f32;
             let mut sample = match self.params.wave_type {
-                WaveType::Sine => (fp * TWO_PI).sin(),
+                WaveType::Sine => (fp * TAU).sin(),
                 WaveType::Square => {
                     if fp < self.state.square_duty {
                         0.5
