@@ -1,9 +1,7 @@
-mod synth;
-
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
-use synth::Synth;
-use synth::presets::coin_params;
+use refexer::synth::Synth;
+use refexer::synth::presets::SynthPreset;
 
 fn main() -> anyhow::Result<()> {
     let stream = stream_setup()?;
@@ -58,7 +56,9 @@ where
     // let sample_rate = config.sample_rate.0 as f32;
     let channels = config.channels as usize;
 
-    let params = coin_params();
+    let mut preset = SynthPreset::new();
+    let params = preset.coin();
+
     let mut synth = Synth::new(params);
     synth.play_sample();
 
