@@ -1,7 +1,7 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
 use refexer::synth::Synth;
-use refexer::synth::presets::SynthPreset;
+use refexer::synth::presets::{SoundType, SynthPreset};
 
 fn main() -> anyhow::Result<()> {
     let stream = stream_setup()?;
@@ -57,7 +57,7 @@ where
     let channels = config.channels as usize;
 
     let mut preset = SynthPreset::new();
-    let params = preset.coin();
+    let params = preset.generate(SoundType::LaserShoot);
 
     let mut synth = Synth::new(params);
     synth.play_sample();

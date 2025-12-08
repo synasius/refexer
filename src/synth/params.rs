@@ -1,9 +1,9 @@
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub enum WaveType {
     #[default]
     Square,
-    Sine,
     Sawtooth,
+    Sine,
     Noise,
 }
 
