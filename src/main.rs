@@ -8,7 +8,7 @@ fn main() -> anyhow::Result<()> {
 
     stream.play()?;
 
-    std::thread::sleep(std::time::Duration::from_millis(4000));
+    std::thread::sleep(std::time::Duration::from_millis(3000));
     Ok(())
 }
 
@@ -57,7 +57,7 @@ where
     let channels = config.channels as usize;
 
     let mut preset = SynthPreset::new();
-    let params = preset.generate(SoundType::LaserShoot);
+    let params = preset.generate(SoundType::Explosion);
 
     let mut synth = Synth::new(params);
     synth.play_sample();

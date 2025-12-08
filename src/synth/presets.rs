@@ -27,7 +27,7 @@ impl SynthPreset {
         match sound_type {
             SoundType::PickupCoin => self.coin(),
             SoundType::LaserShoot => self.shoot(),
-            SoundType::Explosion => todo!(),
+            SoundType::Explosion => self.explosion(),
             SoundType::PowerUp => todo!(),
             SoundType::HitHurt => todo!(),
             SoundType::Jump => todo!(),
@@ -101,6 +101,53 @@ impl SynthPreset {
 
         if self.rng.random::<bool>() {
             params.p_hpf_freq = self.frnd(0.3);
+        }
+
+        params
+    }
+
+    fn explosion(&mut self) -> SynthParams {
+        let mut params = SynthParams {
+            wave_type: WaveType::Noise,
+            ..Default::default()
+        };
+
+        if self.rng.random::<bool>() {
+            params.p_base_freq = 0.1 + self.frnd(0.4);
+            params.p_freq_ramp = -0.1 + self.frnd(0.4);
+        } else {
+            params.p_base_freq = 0.2 + self.frnd(0.7);
+            params.p_freq_ramp = -0.2 - self.frnd(0.2);
+        }
+        params.p_base_freq = params.p_base_freq.powf(2.0);
+
+        if self.rng.random_ratio(1, 4) {
+            params.p_freq_ramp = 0.0;
+        }
+
+        if self.rng.random_ratio(1, 3) {
+            params.p_repeat_speed = 0.3 + self.frnd(0.5);
+        }
+
+        params.p_env_attack = 0.0;
+        params.p_env_sustain = 0.1 + self.frnd(0.3);
+        params.p_env_decay = self.frnd(0.5);
+
+        if self.rng.random::<bool>() {
+            params.p_pha_offset = -0.3 + self.frnd(0.9);
+            params.p_pha_ramp = -self.frnd(0.3);
+        }
+
+        params.p_env_punch = 0.2 + self.frnd(0.6);
+
+        if self.rng.random::<bool>() {
+            params.p_vib_strength = self.frnd(0.7);
+            params.p_vib_speed = self.frnd(0.6);
+        }
+
+        if self.rng.random_ratio(1, 3) {
+            params.p_arp_speed = 0.6 + self.frnd(0.3);
+            params.p_arp_mod = 0.8 - self.frnd(1.6);
         }
 
         params
