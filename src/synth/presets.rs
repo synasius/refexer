@@ -16,6 +16,12 @@ pub struct SynthPreset {
     rng: StdRng,
 }
 
+impl Default for SynthPreset {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SynthPreset {
     pub fn new() -> Self {
         SynthPreset {
@@ -186,7 +192,7 @@ impl SynthPreset {
     fn hit(&mut self) -> SynthParams {
         let waves = [WaveType::Square, WaveType::Sawtooth, WaveType::Noise];
         let mut params = SynthParams {
-            wave_type: waves.choose(&mut self.rng).unwrap().clone(),
+            wave_type: *waves.choose(&mut self.rng).unwrap(),
             p_base_freq: 0.2 + self.frnd(0.6),
             p_freq_ramp: -0.3 - self.frnd(0.4),
             p_env_attack: 0.0,
@@ -232,7 +238,7 @@ impl SynthPreset {
     fn blip(&mut self) -> SynthParams {
         let waves = [WaveType::Square, WaveType::Sawtooth];
         let mut params = SynthParams {
-            wave_type: waves.choose(&mut self.rng).unwrap().clone(),
+            wave_type: *waves.choose(&mut self.rng).unwrap(),
             p_base_freq: 0.2 + self.frnd(0.4),
             p_env_attack: 0.0,
             p_env_sustain: 0.1 + self.frnd(0.1),
