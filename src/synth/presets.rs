@@ -28,10 +28,10 @@ impl SynthPreset {
             SoundType::PickupCoin => self.coin(),
             SoundType::LaserShoot => self.shoot(),
             SoundType::Explosion => self.explosion(),
-            SoundType::PowerUp => todo!(),
-            SoundType::HitHurt => todo!(),
-            SoundType::Jump => todo!(),
-            SoundType::BlipSelect => todo!(),
+            SoundType::PowerUp => self.powerup(),
+            SoundType::HitHurt => self.hit(),
+            SoundType::Jump => self.jump(),
+            SoundType::BlipSelect => self.blip(),
         }
     }
 
@@ -148,6 +148,101 @@ impl SynthPreset {
         if self.rng.random_ratio(1, 3) {
             params.p_arp_speed = 0.6 + self.frnd(0.3);
             params.p_arp_mod = 0.8 - self.frnd(1.6);
+        }
+
+        params
+    }
+
+    fn powerup(&mut self) -> SynthParams {
+        let mut params = SynthParams {
+            p_env_attack: 0.0,
+            p_env_sustain: self.frnd(0.4),
+            p_env_decay: 0.1 + self.frnd(0.4),
+            ..Default::default()
+        };
+
+        if self.rng.random::<bool>() {
+            params.wave_type = WaveType::Sawtooth;
+        } else {
+            params.p_duty = self.frnd(0.6);
+        }
+
+        if self.rng.random::<bool>() {
+            params.p_base_freq = 0.2 + self.frnd(0.3);
+            params.p_freq_ramp = 0.1 + self.frnd(0.4);
+            params.p_repeat_speed = 0.4 + self.frnd(0.4);
+        } else {
+            params.p_base_freq = 0.2 + self.frnd(0.3);
+            params.p_freq_ramp = 0.05 + self.frnd(0.2);
+            if self.rng.random::<bool>() {
+                params.p_vib_strength = self.frnd(0.7);
+                params.p_vib_speed = self.frnd(0.6);
+            }
+        }
+
+        params
+    }
+
+    fn hit(&mut self) -> SynthParams {
+        let waves = [WaveType::Square, WaveType::Sawtooth, WaveType::Noise];
+        let mut params = SynthParams {
+            wave_type: waves.choose(&mut self.rng).unwrap().clone(),
+            p_base_freq: 0.2 + self.frnd(0.6),
+            p_freq_ramp: -0.3 - self.frnd(0.4),
+            p_env_attack: 0.0,
+            p_env_sustain: self.frnd(0.1),
+            p_env_decay: 0.1 + self.frnd(0.2),
+            ..Default::default()
+        };
+
+        if let WaveType::Square = params.wave_type {
+            params.p_duty = self.frnd(0.6);
+        }
+
+        if self.rng.random::<bool>() {
+            params.p_hpf_freq = self.frnd(0.3);
+        }
+
+        params
+    }
+
+    fn jump(&mut self) -> SynthParams {
+        let mut params = SynthParams {
+            wave_type: WaveType::Square,
+            p_duty: self.frnd(0.6),
+            p_base_freq: 0.3 + self.frnd(0.3),
+            p_freq_ramp: 0.1 + self.frnd(0.2),
+            p_env_attack: 0.0,
+            p_env_sustain: 0.1 + self.frnd(0.3),
+            p_env_decay: 0.1 + self.frnd(0.2),
+            ..Default::default()
+        };
+
+        if self.rng.random::<bool>() {
+            params.p_hpf_freq = self.frnd(0.3);
+        }
+
+        if self.rng.random::<bool>() {
+            params.p_lpf_freq = 1.0 - self.frnd(0.6);
+        }
+
+        params
+    }
+
+    fn blip(&mut self) -> SynthParams {
+        let waves = [WaveType::Square, WaveType::Sawtooth];
+        let mut params = SynthParams {
+            wave_type: waves.choose(&mut self.rng).unwrap().clone(),
+            p_base_freq: 0.2 + self.frnd(0.4),
+            p_env_attack: 0.0,
+            p_env_sustain: 0.1 + self.frnd(0.1),
+            p_env_decay: self.frnd(0.2),
+            p_hpf_freq: 0.1,
+            ..Default::default()
+        };
+
+        if let WaveType::Square = params.wave_type {
+            params.p_duty = self.frnd(0.6);
         }
 
         params

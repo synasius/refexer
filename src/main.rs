@@ -57,7 +57,7 @@ where
     let channels = config.channels as usize;
 
     let mut preset = SynthPreset::new();
-    let params = preset.generate(SoundType::Explosion);
+    let params = preset.generate(SoundType::Jump);
 
     let mut synth = Synth::new(params);
     synth.play_sample();
