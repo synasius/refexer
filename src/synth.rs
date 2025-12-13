@@ -217,7 +217,7 @@ impl Synth {
 
         self.state.fmaxperiod = 100.0 / ((self.params.freq_limit as f64).powf(2.0) + 0.001);
         self.state.fslide = 1.0 - (self.params.freq_ramp as f64).powf(3.0) * 0.01;
-        self.state.fdslide = -(self.params.freq_ramp as f64).powf(3.0) * 0.000001;
+        self.state.fdslide = -(self.params.freq_dramp as f64).powf(3.0) * 0.000001;
 
         self.state.square_duty = 0.5 - self.params.duty * 0.5;
         self.state.square_slide = -self.params.duty_ramp * 0.00005;
