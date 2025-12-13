@@ -272,12 +272,11 @@ impl Synth {
             }
             self.state.iphase = self.state.fphase.abs() as i32;
             self.state.ipp = 0;
-            for i in 0..1024 {
-                self.state.phaser_buffer[i] = 0.0;
-            }
 
-            for i in 0..32 {
-                self.state.noise_buffer[i] = self.rng.random::<f32>() * 2.0 - 1.0;
+            self.state.phaser_buffer.fill(0.0);
+
+            for item in &mut self.state.noise_buffer {
+                *item = self.rng.random::<f32>() * 2.0 - 1.0;
             }
 
             self.state.rep_time = 0;
