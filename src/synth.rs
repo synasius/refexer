@@ -124,12 +124,11 @@ impl Synth {
         let mut ssample: f32 = 0.0;
         // 8x supersampling
         for _si in 0..8 {
-            // let mut sample: f32 = 0.0;
             self.state.phase += 1;
 
             if self.state.phase >= self.state.period {
                 self.state.phase %= self.state.period;
-                if let WaveType::Noise = self.params.wave_type {
+                if matches!(self.params.wave_type, WaveType::Noise) {
                     for i in 0..32 {
                         self.state.noise_buffer[i] = self.rng.random::<f32>() * 2.0 - 1.0;
                     }

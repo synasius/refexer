@@ -201,7 +201,7 @@ impl SynthPreset {
             ..Default::default()
         };
 
-        if let WaveType::Square = params.wave_type {
+        if matches!(params.wave_type, WaveType::Square) {
             params.duty = self.frnd(0.6);
         }
 
@@ -247,7 +247,7 @@ impl SynthPreset {
             ..Default::default()
         };
 
-        if let WaveType::Square = params.wave_type {
+        if matches!(params.wave_type, WaveType::Square) {
             params.duty = self.frnd(0.6);
         }
 
