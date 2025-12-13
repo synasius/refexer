@@ -19,14 +19,12 @@ pub struct SynthParams {
 
     pub vib_strength: f32,
     pub vib_speed: f32,
-    pub vib_delay: f32,
 
     pub env_attack: f32,
     pub env_sustain: f32,
     pub env_decay: f32,
     pub env_punch: f32,
 
-    pub filter_on: bool,
     pub lpf_resonance: f32,
     pub lpf_freq: f32,
     pub lpf_ramp: f32,
@@ -54,14 +52,12 @@ impl Default for SynthParams {
 
             vib_strength: Default::default(),
             vib_speed: Default::default(),
-            vib_delay: Default::default(),
 
             env_attack: Default::default(),
             env_sustain: 0.3,
             env_decay: 0.4,
             env_punch: Default::default(),
 
-            filter_on: Default::default(),
             lpf_resonance: Default::default(),
             lpf_freq: 1.0,
             lpf_ramp: Default::default(),
