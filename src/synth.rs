@@ -68,11 +68,10 @@ impl Synth {
                 self.state.playing_sample = false;
             }
         }
-        let mut rfperiod = self.state.fperiod as f32;
+        let mut rfperiod = self.state.fperiod;
         if self.state.vib_amp > 0.0 {
             self.state.vib_phase += self.state.vib_speed;
-            rfperiod =
-                self.state.fperiod as f32 * (1.0 + self.state.vib_phase.sin() * self.state.vib_amp);
+            rfperiod = self.state.fperiod * (1.0 + self.state.vib_phase.sin() * self.state.vib_amp);
         }
 
         self.state.period = rfperiod as i32;
@@ -209,20 +208,20 @@ impl Synth {
             self.state.phase = 0;
         }
 
-        self.state.fperiod = 100.0 / ((self.params.base_freq as f64).powf(2.0) + 0.001);
+        self.state.fperiod = 100.0 / (self.params.base_freq.powf(2.0) + 0.001);
         self.state.period = self.state.fperiod as i32;
 
-        self.state.fmaxperiod = 100.0 / ((self.params.freq_limit as f64).powf(2.0) + 0.001);
-        self.state.fslide = 1.0 - (self.params.freq_ramp as f64).powf(3.0) * 0.01;
-        self.state.fdslide = -(self.params.freq_dramp as f64).powf(3.0) * 0.000001;
+        self.state.fmaxperiod = 100.0 / (self.params.freq_limit.powf(2.0) + 0.001);
+        self.state.fslide = 1.0 - self.params.freq_ramp.powf(3.0) * 0.01;
+        self.state.fdslide = -self.params.freq_dramp.powf(3.0) * 0.000001;
 
         self.state.square_duty = 0.5 - self.params.duty * 0.5;
         self.state.square_slide = -self.params.duty_ramp * 0.00005;
 
         if self.params.arp_mod >= 0.0 {
-            self.state.arp_mod = 1.0 - (self.params.arp_mod as f64).powf(2.0) * 0.9;
+            self.state.arp_mod = 1.0 - self.params.arp_mod.powf(2.0) * 0.9;
         } else {
-            self.state.arp_mod = 1.0 + (self.params.arp_mod as f64).powf(2.0) * 10.0;
+            self.state.arp_mod = 1.0 + self.params.arp_mod.powf(2.0) * 10.0;
         }
 
         self.state.arp_time = 0;

@@ -6,13 +6,13 @@ pub struct SynthState {
 
     pub arp_time: i32,
     pub arp_limit: i32,
-    pub arp_mod: f64,
+    pub arp_mod: f32,
 
-    pub fperiod: f64,
+    pub fperiod: f32,
     pub period: i32,
-    pub fmaxperiod: f64,
-    pub fslide: f64,
-    pub fdslide: f64,
+    pub fmaxperiod: f32,
+    pub fslide: f32,
+    pub fdslide: f32,
 
     pub square_duty: f32,
     pub square_slide: f32,
