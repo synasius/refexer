@@ -197,12 +197,9 @@ impl Synth {
 
     pub fn synth_sample_buffer(&mut self, length: usize, buffer: &mut [f32]) {
         for item in buffer.iter_mut().take(length) {
-            let ssample = self.synth_sample();
-            if let Some(ssample) = ssample {
-                // assign the computed sample
-                *item = ssample;
-            } else {
-                break;
+            match self.synth_sample() {
+                Some(sample) => *item = sample,
+                None => break,
             }
         }
     }
