@@ -2,7 +2,9 @@ use super::params::{SynthParams, WaveType};
 
 use rand::{Rng, SeedableRng, rngs::StdRng, seq::IndexedRandom};
 
+#[derive(Default)]
 pub enum SoundType {
+    #[default]
     PickupCoin,
     LaserShoot,
     Explosion,
@@ -10,6 +12,27 @@ pub enum SoundType {
     HitHurt,
     Jump,
     BlipSelect,
+}
+
+impl TryFrom<&str> for SoundType {
+    type Error = String;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value.to_lowercase().as_str() {
+            "coin" => Ok(Self::PickupCoin),
+            "pickup" => Ok(Self::PickupCoin),
+            "shoot" => Ok(Self::LaserShoot),
+            "laser" => Ok(Self::LaserShoot),
+            "explosion" => Ok(Self::Explosion),
+            "powerup" => Ok(Self::PowerUp),
+            "hit" => Ok(Self::HitHurt),
+            "hurt" => Ok(Self::HitHurt),
+            "jump" => Ok(Self::Jump),
+            "select" => Ok(Self::BlipSelect),
+            "blip" => Ok(Self::BlipSelect),
+            _ => Err(format!("Unknown sound type: {}", value)),
+        }
+    }
 }
 
 pub struct SynthPreset {

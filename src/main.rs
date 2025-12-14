@@ -1,10 +1,19 @@
+use std::process;
+
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
 use refexer::synth::Synth;
 use refexer::synth::presets::{SoundType, SynthPreset};
 
 fn main() -> anyhow::Result<()> {
-    let stream = stream_setup()?;
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() < 2 {
+        println!("Not enough arguments");
+        process::exit(1);
+    }
+
+    let sound_type = SoundType::try_from(args[1].as_str()).unwrap_or_default();
+    let stream = stream_setup(sound_type)?;
 
     stream.play()?;
 
@@ -12,20 +21,20 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn stream_setup() -> anyhow::Result<cpal::Stream> {
+fn stream_setup(sound_type: SoundType) -> anyhow::Result<cpal::Stream> {
     let (device, config) = host_device_setup()?;
 
     match config.sample_format() {
-        cpal::SampleFormat::I8 => make_stream::<i8>(&device, &config.into()),
-        cpal::SampleFormat::I16 => make_stream::<i16>(&device, &config.into()),
-        cpal::SampleFormat::I32 => make_stream::<i32>(&device, &config.into()),
-        cpal::SampleFormat::I64 => make_stream::<i64>(&device, &config.into()),
-        cpal::SampleFormat::U8 => make_stream::<u8>(&device, &config.into()),
-        cpal::SampleFormat::U16 => make_stream::<u16>(&device, &config.into()),
-        cpal::SampleFormat::U32 => make_stream::<u32>(&device, &config.into()),
-        cpal::SampleFormat::U64 => make_stream::<u64>(&device, &config.into()),
-        cpal::SampleFormat::F32 => make_stream::<f32>(&device, &config.into()),
-        cpal::SampleFormat::F64 => make_stream::<f64>(&device, &config.into()),
+        cpal::SampleFormat::I8 => make_stream::<i8>(&device, &config.into(), sound_type),
+        cpal::SampleFormat::I16 => make_stream::<i16>(&device, &config.into(), sound_type),
+        cpal::SampleFormat::I32 => make_stream::<i32>(&device, &config.into(), sound_type),
+        cpal::SampleFormat::I64 => make_stream::<i64>(&device, &config.into(), sound_type),
+        cpal::SampleFormat::U8 => make_stream::<u8>(&device, &config.into(), sound_type),
+        cpal::SampleFormat::U16 => make_stream::<u16>(&device, &config.into(), sound_type),
+        cpal::SampleFormat::U32 => make_stream::<u32>(&device, &config.into(), sound_type),
+        cpal::SampleFormat::U64 => make_stream::<u64>(&device, &config.into(), sound_type),
+        cpal::SampleFormat::F32 => make_stream::<f32>(&device, &config.into(), sound_type),
+        cpal::SampleFormat::F64 => make_stream::<f64>(&device, &config.into(), sound_type),
         sample_format => Err(anyhow::Error::msg(format!(
             "Unsupported sample format '{sample_format}'"
         ))),
@@ -49,6 +58,7 @@ fn host_device_setup() -> Result<(cpal::Device, cpal::SupportedStreamConfig), an
 fn make_stream<T>(
     device: &cpal::Device,
     config: &cpal::StreamConfig,
+    sound_type: SoundType,
 ) -> anyhow::Result<cpal::Stream>
 where
     T: cpal::SizedSample + cpal::FromSample<f32>,
@@ -57,7 +67,7 @@ where
     let channels = config.channels as usize;
 
     let mut preset = SynthPreset::new();
-    let params = preset.generate(SoundType::Jump);
+    let params = preset.generate(sound_type);
 
     let mut synth = Synth::new(params);
     synth.play_sample();

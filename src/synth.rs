@@ -9,6 +9,8 @@ use state::SynthState;
 
 use rand::prelude::*;
 
+const SUPERSAMPLING_FACTOR: usize = 8;
+
 pub struct Synth {
     params: SynthParams,
     state: SynthState,
@@ -123,14 +125,14 @@ impl Synth {
 
         let mut ssample: f32 = 0.0;
         // 8x supersampling
-        for _si in 0..8 {
+        for _si in 0..SUPERSAMPLING_FACTOR {
             self.state.phase += 1;
 
             if self.state.phase >= self.state.period {
                 self.state.phase %= self.state.period;
                 if matches!(self.params.wave_type, WaveType::Noise) {
-                    for i in 0..32 {
-                        self.state.noise_buffer[i] = self.rng.random::<f32>() * 2.0 - 1.0;
+                    for element in &mut self.state.noise_buffer {
+                        *element = self.rng.random::<f32>() * 2.0 - 1.0;
                     }
                 }
             }
@@ -186,7 +188,7 @@ impl Synth {
             ssample += sample * self.state.env_vol;
         }
 
-        ssample = ssample / 8.0 * self.master_vol;
+        ssample = ssample / SUPERSAMPLING_FACTOR as f32 * self.master_vol;
         ssample *= 2.0 * self.sound_vol;
         ssample = ssample.clamp(-1.0, 1.0);
 
