@@ -47,8 +47,6 @@ where
     // let sample_rate = config.sample_rate.0 as f32;
     let channels = config.channels as usize;
 
-    synth.lock().unwrap().play_sample();
-
     let stream = device.build_output_stream(
         config,
         move |data: &mut [T], _: &cpal::OutputCallbackInfo| {

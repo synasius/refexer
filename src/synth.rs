@@ -38,8 +38,8 @@ impl Synth {
         self.state.playing_sample
     }
 
-    pub fn reset_params(&mut self) {
-        self.params = SynthParams::default()
+    pub fn set_params(&mut self, params: SynthParams) {
+        self.params = params;
     }
 
     pub fn play_sample(&mut self) {
