@@ -2,7 +2,7 @@ use super::params::{SynthParams, WaveType};
 
 use rand::{Rng, SeedableRng, rngs::StdRng, seq::IndexedRandom};
 
-#[derive(Default)]
+#[derive(Default, Copy, Clone)]
 pub enum SoundType {
     #[default]
     PickupCoin,
