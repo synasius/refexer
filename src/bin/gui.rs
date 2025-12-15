@@ -27,26 +27,26 @@ fn main() -> anyhow::Result<()> {
     eframe::run_native(
         "My egui App",
         options,
-        Box::new(|_cc| Ok(Box::new(MyApp::new(synth)))),
+        Box::new(|_cc| Ok(Box::new(RefexerApp::new(synth)))),
     )
     .map_err(|e| anyhow!("Failed to start eframe: {}", e))
 }
 
-struct MyApp {
+struct RefexerApp {
     synth: Arc<Mutex<Synth>>,
     preset: SynthPreset,
 }
 
-impl MyApp {
+impl RefexerApp {
     fn new(synth: Arc<Mutex<Synth>>) -> Self {
-        MyApp {
+        RefexerApp {
             synth,
             preset: SynthPreset::new(),
         }
     }
 }
 
-impl eframe::App for MyApp {
+impl eframe::App for RefexerApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Refexer");
