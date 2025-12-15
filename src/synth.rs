@@ -34,6 +34,10 @@ impl Synth {
         }
     }
 
+    pub fn is_playing(&self) -> bool {
+        self.state.playing_sample
+    }
+
     pub fn reset_params(&mut self) {
         self.params = SynthParams::default()
     }
