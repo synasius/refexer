@@ -22,7 +22,9 @@ fn main() -> anyhow::Result<()> {
     let params = preset.generate(sound_type);
 
     // create the synth from params and pass it to the stream
-    let synth = Synth::new(params);
+    let mut synth = Synth::new(params);
+    synth.play_sample();
+
     let synth_mutex = Arc::new(Mutex::new(synth));
     let stream = stream_setup(Arc::clone(&synth_mutex))?;
 
