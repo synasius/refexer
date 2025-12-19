@@ -1,7 +1,7 @@
-///! Refexer GUI Application
-///!
-///! A gui for generating retro-style sound effects used in old
-///! video games.
+//! Refexer GUI Application
+//!
+//! A gui for generating retro-style sound effects used in old
+//! video games.
 use anyhow::anyhow;
 use cpal::traits::StreamTrait;
 use std::sync::{Arc, Mutex};
