@@ -4,9 +4,10 @@
 //! video games.
 use anyhow::anyhow;
 use cpal::traits::StreamTrait;
-use std::sync::{Arc, Mutex};
+use egui_plot::{Legend, Line, Plot, PlotPoint, PlotPoints};
+use std::sync::mpsc::{self, Sender};
 
-use eframe::egui::{self, RichText};
+use eframe::egui::{self, Response, RichText};
 use refexer::{
     sound::stream_setup,
     synth::{
@@ -17,10 +18,11 @@ use refexer::{
 };
 
 fn main() -> anyhow::Result<()> {
+    let (tx, rx) = mpsc::channel();
+
     // initialize the synth and the audio stream
     let synth = Synth::new(SynthParams::default());
-    let synth = Arc::new(Mutex::new(synth));
-    let stream = stream_setup(Arc::clone(&synth))?;
+    let stream = stream_setup(rx)?;
     stream.play()?;
 
     let options = eframe::NativeOptions {
@@ -31,7 +33,7 @@ fn main() -> anyhow::Result<()> {
     eframe::run_native(
         "Refexer - Retro Sound FX Generator",
         options,
-        Box::new(|_cc| Ok(Box::new(RefexerApp::new(synth)))),
+        Box::new(|_cc| Ok(Box::new(RefexerApp::new(synth, tx)))),
     )
     .map_err(|e| anyhow!("Failed to start eframe: {}", e))
 }
@@ -50,29 +52,44 @@ const SOUND_BUTTONS: &[(&str, SoundType)] = &[
 /// Main application state.
 struct RefexerApp {
     /// Thread-safe handle to the audio synth.
-    synth: Arc<Mutex<Synth>>,
+    synth: Synth,
+    /// TODO:
+    sender: Sender<Vec<f32>>,
     /// Random preset generator.
     preset: SynthPreset,
+    /// inner plot data
+    pub inner: BorrowPointsExample,
 }
 
 impl RefexerApp {
-    fn new(synth: Arc<Mutex<Synth>>) -> Self {
+    fn new(synth: Synth, sender: Sender<Vec<f32>>) -> Self {
         RefexerApp {
             synth,
+            sender,
             preset: SynthPreset::new(),
+            inner: Default::default(),
         }
     }
 
     /// Plays a sound effect for the given type.
     fn play_sound(&mut self, sound_type: SoundType) {
         let params = self.preset.generate(sound_type);
-        match self.synth.lock() {
-            Ok(mut synth) => {
-                synth.set_params(params);
-                synth.play_sample();
-            }
-            Err(e) => eprintln!("Failed to acquire synth lock: {}", e),
+        self.synth.set_params(params);
+        self.synth.play_sample();
+
+        // add sound generation and tx.send
+        let mut data = Vec::new();
+        while let Some(value) = self.synth.synth_sample() {
+            data.push(value);
         }
+
+        self.inner.points.clear();
+        // copy the data to the inner plot buffer
+        for (i, &v) in data.iter().enumerate() {
+            self.inner.points.push(PlotPoint::new(i as f64, v as f64));
+        }
+
+        self.sender.send(data).unwrap();
     }
 
     /// Renders a sound button and handles the click by playing
@@ -93,11 +110,37 @@ impl eframe::App for RefexerApp {
             ui.heading(RichText::new("Refexer").size(20.0));
             ui.separator();
 
-            ui.vertical(|ui| {
-                for &(label, sound_type) in SOUND_BUTTONS {
-                    self.sound_button(ui, label, sound_type);
-                }
+            ui.horizontal(|ui| {
+                ui.vertical(|ui| {
+                    for &(label, sound_type) in SOUND_BUTTONS {
+                        self.sound_button(ui, label, sound_type);
+                    }
+                });
+                ui.vertical(|ui| {
+                    self.inner.show_plot(ui);
+                })
             });
         });
+    }
+}
+
+pub struct BorrowPointsExample {
+    points: Vec<PlotPoint>,
+}
+
+impl Default for BorrowPointsExample {
+    fn default() -> Self {
+        Self { points: Vec::new() }
+    }
+}
+
+impl BorrowPointsExample {
+    pub fn show_plot(&self, ui: &mut egui::Ui) -> Response {
+        Plot::new("My Plot")
+            .legend(Legend::default())
+            .show(ui, |plot_ui| {
+                plot_ui.line(Line::new("curve", PlotPoints::Borrowed(&self.points)).name("curve"));
+            })
+            .response
     }
 }

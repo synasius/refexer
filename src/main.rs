@@ -1,5 +1,5 @@
 use std::process;
-use std::sync::{Arc, Mutex};
+use std::sync::mpsc;
 
 use cpal::traits::StreamTrait;
 
@@ -25,14 +25,22 @@ fn main() -> anyhow::Result<()> {
     let mut synth = Synth::new(params);
     synth.play_sample();
 
-    let synth_mutex = Arc::new(Mutex::new(synth));
-    let stream = stream_setup(Arc::clone(&synth_mutex))?;
+    let (tx, rx) = mpsc::channel();
+    let stream = stream_setup(rx)?;
 
     stream.play()?;
 
-    while synth_mutex.lock().unwrap().is_playing() {
-        std::thread::sleep(std::time::Duration::from_millis(100));
+    // generate sound data and send
+    let mut data = Vec::new();
+    while let Some(value) = synth.synth_sample() {
+        data.push(value);
     }
+    let length = data.len();
+    tx.send(data)?;
+
+    let secs = length as f32 / 44100.0;
+    // wait for the length of the sound
+    std::thread::sleep(std::time::Duration::from_secs_f32(secs + 0.1));
 
     Ok(())
 }
