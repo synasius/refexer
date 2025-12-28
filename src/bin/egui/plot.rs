@@ -1,14 +1,9 @@
 use eframe::egui;
 use egui_plot::{Line, Plot, PlotPoint, PlotPoints};
 
+#[derive(Default)]
 pub struct WaveformPlot {
     pub(crate) points: Vec<PlotPoint>,
-}
-
-impl Default for WaveformPlot {
-    fn default() -> Self {
-        Self { points: Vec::new() }
-    }
 }
 
 impl WaveformPlot {
