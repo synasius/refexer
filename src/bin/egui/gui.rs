@@ -56,12 +56,12 @@ const SOUND_BUTTONS: &[(&str, SoundType)] = &[
 struct RefexerApp {
     /// Thread-safe handle to the audio synth.
     synth: Synth,
-    /// TODO:
+    /// Channel sender for streaming audio data to the playback thread.
     sender: Sender<Vec<f32>>,
     /// Random preset generator.
     preset: SynthPreset,
     /// inner plot data
-    pub inner: plot::WaveformPlot,
+    inner: plot::WaveformPlot,
 }
 
 impl RefexerApp {
@@ -92,7 +92,9 @@ impl RefexerApp {
             self.inner.points.push(PlotPoint::new(i as f64, v as f64));
         }
 
-        self.sender.send(data).unwrap();
+        if let Err(e) = self.sender.send(data) {
+            eprintln!("Failed to send audio data: {}", e);
+        }
     }
 
     /// Renders a sound button and handles the click by playing

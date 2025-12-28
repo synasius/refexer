@@ -17,7 +17,7 @@ fn main() -> anyhow::Result<()> {
 
     let sound_type = SoundType::try_from(args[1].as_str()).unwrap_or_default();
 
-    // create the correct prese for the selected sound type
+    // create the correct preset for the selected sound type
     let mut preset = SynthPreset::new();
     let params = preset.generate(sound_type);
 
