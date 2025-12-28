@@ -14,7 +14,3 @@ rand = "0.9.2"
 [[bin]]
 name = "refexer-gui"
 path = "src/bin/egui/gui.rs"
-
-[[bin]]
-name = "refexer-plot"
-path = "src/bin/plot/gui.rs"
