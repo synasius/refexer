@@ -61,7 +61,7 @@ struct RefexerApp {
     /// Random preset generator.
     preset: SynthPreset,
     /// inner plot data
-    pub inner: plot::BorrowPointsExample,
+    pub inner: plot::WaveformPlot,
 }
 
 impl RefexerApp {

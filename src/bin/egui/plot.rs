@@ -2,19 +2,19 @@ use eframe::egui;
 use eframe::egui::Response;
 use egui_plot::{Legend, Line, Plot, PlotPoint, PlotPoints};
 
-pub struct BorrowPointsExample {
+pub struct WaveformPlot {
     pub(crate) points: Vec<PlotPoint>,
 }
 
-impl Default for BorrowPointsExample {
+impl Default for WaveformPlot {
     fn default() -> Self {
         Self { points: Vec::new() }
     }
 }
 
-impl BorrowPointsExample {
+impl WaveformPlot {
     pub fn show_plot(&self, ui: &mut egui::Ui) -> Response {
-        Plot::new("My Plot")
+        Plot::new("Waveform")
             .legend(Legend::default())
             .show(ui, |plot_ui| {
                 plot_ui.line(Line::new("curve", PlotPoints::Borrowed(&self.points)).name("curve"));
