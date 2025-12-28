@@ -2,12 +2,13 @@
 //!
 //! A gui for generating retro-style sound effects used in old
 //! video games.
+
 use anyhow::anyhow;
 use cpal::traits::StreamTrait;
-use egui_plot::{Legend, Line, Plot, PlotPoint, PlotPoints};
+use egui_plot::PlotPoint;
 use std::sync::mpsc::{self, Sender};
 
-use eframe::egui::{self, Response, RichText};
+use eframe::egui::{self, RichText};
 use refexer::{
     sound::stream_setup,
     synth::{
@@ -16,6 +17,8 @@ use refexer::{
         presets::{SoundType, SynthPreset},
     },
 };
+
+mod plot;
 
 fn main() -> anyhow::Result<()> {
     let (tx, rx) = mpsc::channel();
@@ -58,7 +61,7 @@ struct RefexerApp {
     /// Random preset generator.
     preset: SynthPreset,
     /// inner plot data
-    pub inner: BorrowPointsExample,
+    pub inner: plot::BorrowPointsExample,
 }
 
 impl RefexerApp {
@@ -121,26 +124,5 @@ impl eframe::App for RefexerApp {
                 })
             });
         });
-    }
-}
-
-pub struct BorrowPointsExample {
-    points: Vec<PlotPoint>,
-}
-
-impl Default for BorrowPointsExample {
-    fn default() -> Self {
-        Self { points: Vec::new() }
-    }
-}
-
-impl BorrowPointsExample {
-    pub fn show_plot(&self, ui: &mut egui::Ui) -> Response {
-        Plot::new("My Plot")
-            .legend(Legend::default())
-            .show(ui, |plot_ui| {
-                plot_ui.line(Line::new("curve", PlotPoints::Borrowed(&self.points)).name("curve"));
-            })
-            .response
     }
 }
