@@ -26,7 +26,7 @@ fn main() -> anyhow::Result<()> {
     synth.play_sample();
 
     let (tx, rx) = mpsc::channel();
-    let stream = stream_setup(rx)?;
+    let (stream, sample_rate) = stream_setup(rx)?;
 
     stream.play()?;
 
@@ -38,7 +38,7 @@ fn main() -> anyhow::Result<()> {
     let length = data.len();
     tx.send(data)?;
 
-    let secs = length as f32 / 44100.0;
+    let secs = length as f32 / sample_rate.0 as f32;
     // wait for the length of the sound
     std::thread::sleep(std::time::Duration::from_secs_f32(secs + 0.1));
 

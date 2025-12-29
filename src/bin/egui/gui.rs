@@ -25,7 +25,7 @@ fn main() -> anyhow::Result<()> {
 
     // initialize the synth and the audio stream
     let synth = Synth::new(SynthParams::default());
-    let stream = stream_setup(rx)?;
+    let (stream, _) = stream_setup(rx)?;
     stream.play()?;
 
     let options = eframe::NativeOptions {

@@ -1,10 +1,13 @@
 use cpal::traits::{DeviceTrait, HostTrait};
 use std::sync::mpsc::Receiver;
 
-pub fn stream_setup(receiver: Receiver<Vec<f32>>) -> anyhow::Result<cpal::Stream> {
+pub fn stream_setup(
+    receiver: Receiver<Vec<f32>>,
+) -> anyhow::Result<(cpal::Stream, cpal::SampleRate)> {
     let (device, config) = host_device_setup()?;
 
-    match config.sample_format() {
+    let sample_rate = config.sample_rate();
+    let stream = match config.sample_format() {
         cpal::SampleFormat::I8 => make_stream::<i8>(&device, &config.into(), receiver),
         cpal::SampleFormat::I16 => make_stream::<i16>(&device, &config.into(), receiver),
         cpal::SampleFormat::I32 => make_stream::<i32>(&device, &config.into(), receiver),
@@ -18,7 +21,9 @@ pub fn stream_setup(receiver: Receiver<Vec<f32>>) -> anyhow::Result<cpal::Stream
         sample_format => Err(anyhow::Error::msg(format!(
             "Unsupported sample format '{sample_format}'"
         ))),
-    }
+    }?;
+
+    Ok((stream, sample_rate))
 }
 
 fn host_device_setup() -> Result<(cpal::Device, cpal::SupportedStreamConfig), anyhow::Error> {
