@@ -97,21 +97,19 @@ impl Synth {
             }
         }
 
-        match self.state.env_stage {
-            0 => {
-                self.state.env_vol = self.state.env_time as f32 / self.state.env_length[0] as f32;
-            }
+        self.state.env_vol = match self.state.env_stage {
+            0 => self.state.env_time as f32 / self.state.env_length[0] as f32,
             1 => {
-                self.state.env_vol = 1.0
-                    + (1.0 - self.state.env_time as f32 / self.state.env_length[1] as f32)
-                        * 2.0
-                        * self.params.env_punch
+                1.0 + (1.0 - self.state.env_time as f32 / self.state.env_length[1] as f32)
+                    * 2.0
+                    * self.params.env_punch
             }
-            2 => {
-                self.state.env_vol =
-                    1.0 - self.state.env_time as f32 / self.state.env_length[2] as f32
-            }
-            _ => {}
+            2 => 1.0 - self.state.env_time as f32 / self.state.env_length[2] as f32,
+            _ => self.state.env_vol,
+        };
+
+        if self.state.env_vol.is_infinite() {
+            self.state.env_vol = 1.0;
         }
 
         // phaser step
@@ -174,7 +172,6 @@ impl Synth {
             self.state.fltp += self.state.fltdp;
 
             // hp filter
-
             self.state.fltphp += self.state.fltp - pp;
             self.state.fltphp -= self.state.fltphp * self.state.flthp;
             sample = self.state.fltphp;
