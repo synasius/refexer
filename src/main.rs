@@ -11,11 +11,18 @@ fn main() -> anyhow::Result<()> {
     // parse the command line and get the sound type
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 2 {
-        println!("Not enough arguments");
+        eprintln!("Usage: {} <sound_type>", args[0]);
+        eprintln!("Sound types: coin, shoot, explosion, powerup, hit, jump, blip");
         process::exit(1);
     }
 
-    let sound_type = SoundType::try_from(args[1].as_str()).unwrap_or_default();
+    let sound_type = match SoundType::try_from(args[1].as_str()) {
+        Ok(st) => st,
+        Err(e) => {
+            eprintln!("Warning: {}, using default sound type", e);
+            SoundType::default()
+        }
+    };
 
     // create the correct preset for the selected sound type
     let mut preset = SynthPreset::new();
