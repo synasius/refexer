@@ -118,7 +118,7 @@ impl eframe::App for RefexerApp {
                     }
                     ui.add_space(48.0);
                     ui.add_sized([100.0, 30.0], egui::Button::new("Mutate"));
-                    ui.add_sized([100.0, 30.0], egui::Button::new("Randomize"));
+                    self.sound_button(ui, "Randomize", SoundType::Randomize);
                 });
                 ui.vertical(|ui| {
                     self.waveform_plot.show_plot(ui);

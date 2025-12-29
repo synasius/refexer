@@ -12,6 +12,7 @@ pub enum SoundType {
     HitHurt,
     Jump,
     BlipSelect,
+    Randomize,
 }
 
 impl TryFrom<&str> for SoundType {
@@ -30,6 +31,7 @@ impl TryFrom<&str> for SoundType {
             "jump" => Ok(Self::Jump),
             "select" => Ok(Self::BlipSelect),
             "blip" => Ok(Self::BlipSelect),
+            "randomize" => Ok(Self::Randomize),
             _ => Err(format!("Unknown sound type: {}", value)),
         }
     }
@@ -61,6 +63,7 @@ impl SynthPreset {
             SoundType::HitHurt => self.hit(),
             SoundType::Jump => self.jump(),
             SoundType::BlipSelect => self.blip(),
+            SoundType::Randomize => self.randomize(),
         }
     }
 
@@ -273,6 +276,71 @@ impl SynthPreset {
         if matches!(params.wave_type, WaveType::Square) {
             params.duty = self.frnd(0.6);
         }
+
+        params
+    }
+
+    fn randomize(&mut self) -> SynthParams {
+        let waves = [
+            WaveType::Square,
+            WaveType::Sawtooth,
+            WaveType::Sine,
+            WaveType::Noise,
+        ];
+        let mut params = SynthParams {
+            wave_type: *waves.choose(&mut self.rng).unwrap(),
+            ..Default::default()
+        };
+
+        params.base_freq = (self.frnd(2.0) - 1.0).powf(2.0);
+        if self.rng.random::<bool>() {
+            params.base_freq = (self.frnd(2.0) - 1.0).powf(3.0) + 0.5;
+        }
+
+        params.freq_limit = 0.0;
+        params.freq_ramp = (self.frnd(2.0) - 1.0).powf(5.0);
+
+        if params.base_freq > 0.7 && params.freq_ramp > 0.2 {
+            params.freq_ramp = -params.freq_ramp;
+        }
+        if params.base_freq < 0.2 && params.freq_ramp < -0.05 {
+            params.freq_ramp = -params.freq_ramp;
+        }
+        params.freq_dramp = (self.frnd(2.0) - 1.0).powf(3.0);
+
+        params.duty = self.frnd(2.0) - 1.0;
+        params.duty_ramp = (self.frnd(2.0) - 1.0).powf(3.0);
+
+        params.vib_strength = (self.frnd(2.0) - 1.0).powf(3.0);
+        params.vib_speed = self.frnd(2.0) - 1.0;
+
+        params.env_attack = (self.frnd(2.0) - 1.0).powf(3.0);
+        params.env_sustain = (self.frnd(2.0) - 1.0).powf(2.0);
+        params.env_decay = self.frnd(2.0) - 1.0;
+        params.env_punch = self.frnd(0.8).powf(2.0);
+
+        if params.env_attack + params.env_sustain + params.env_decay < 0.2 {
+            params.env_sustain += 0.2 + self.frnd(0.3);
+            params.env_decay += 0.2 + self.frnd(0.3);
+        }
+
+        params.lpf_resonance = self.frnd(2.0) - 1.0;
+        params.lpf_freq = 1.0 - self.frnd(1.0).powf(3.0);
+        params.lpf_ramp = (self.frnd(2.0) - 1.0).powf(3.0);
+
+        if params.lpf_freq < 0.1 && params.lpf_ramp < -0.05 {
+            params.lpf_ramp = -params.lpf_ramp;
+        }
+
+        params.hpf_freq = self.frnd(1.0).powf(5.0);
+        params.hpf_ramp = (self.frnd(2.0) - 1.0).powf(5.0);
+
+        params.pha_offset = (self.frnd(2.0) - 1.0).powf(3.0);
+        params.pha_ramp = (self.frnd(2.0) - 1.0).powf(3.0);
+
+        params.repeat_speed = self.frnd(2.0) - 1.0;
+        params.arp_speed = self.frnd(2.0) - 1.0;
+        params.arp_mod = self.frnd(2.0) - 1.0;
 
         params
     }
