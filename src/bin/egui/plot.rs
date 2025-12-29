@@ -14,4 +14,12 @@ impl WaveformPlot {
             })
             .response
     }
+
+    pub fn set_data(&mut self, samples: &[f32]) {
+        self.points.clear();
+
+        for (i, &v) in samples.iter().enumerate() {
+            self.points.push(PlotPoint::new(i as f64, v as f64));
+        }
+    }
 }

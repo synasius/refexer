@@ -5,7 +5,6 @@
 
 use anyhow::anyhow;
 use cpal::traits::StreamTrait;
-use egui_plot::PlotPoint;
 use std::sync::mpsc::{self, Sender};
 
 use eframe::egui::{self, RichText};
@@ -61,7 +60,7 @@ struct RefexerApp {
     /// Random preset generator.
     preset: SynthPreset,
     /// inner plot data
-    inner: plot::WaveformPlot,
+    waveform_plot: plot::WaveformPlot,
 }
 
 impl RefexerApp {
@@ -70,7 +69,7 @@ impl RefexerApp {
             synth,
             sender,
             preset: SynthPreset::new(),
-            inner: Default::default(),
+            waveform_plot: Default::default(),
         }
     }
 
@@ -86,11 +85,7 @@ impl RefexerApp {
             data.push(value);
         }
 
-        self.inner.points.clear();
-        // copy the data to the inner plot buffer
-        for (i, &v) in data.iter().enumerate() {
-            self.inner.points.push(PlotPoint::new(i as f64, v as f64));
-        }
+        self.waveform_plot.set_data(&data);
 
         if let Err(e) = self.sender.send(data) {
             eprintln!("Failed to send audio data: {}", e);
@@ -122,7 +117,7 @@ impl eframe::App for RefexerApp {
                     }
                 });
                 ui.vertical(|ui| {
-                    self.inner.show_plot(ui);
+                    self.waveform_plot.show_plot(ui);
                 })
             });
         });
