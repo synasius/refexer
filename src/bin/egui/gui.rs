@@ -54,7 +54,7 @@ const SOUND_BUTTONS: &[(&str, SoundType)] = &[
 
 /// Main application state.
 struct RefexerApp {
-    /// Thread-safe handle to the audio synth.
+    /// Audio synth.
     synth: Synth,
     /// Channel sender for streaming audio data to the playback thread.
     sender: Sender<Vec<f32>>,
