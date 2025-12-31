@@ -92,6 +92,24 @@ impl RefexerApp {
         }
     }
 
+    /// Plays the current sound effect wiht params slightly mutated
+    fn mutate_sound(&mut self) {
+        self.synth.mutate();
+        self.synth.play_sample();
+
+        // add sound generation and tx.send
+        let mut data = Vec::new();
+        while let Some(value) = self.synth.synth_sample() {
+            data.push(value);
+        }
+
+        self.waveform_plot.set_data(&data);
+
+        if let Err(e) = self.sender.send(data) {
+            eprintln!("Failed to send audio data: {}", e);
+        }
+    }
+
     /// Renders a sound button and handles the click by playing
     /// the corresponding sound type effect.
     fn sound_button(&mut self, ui: &mut egui::Ui, label: &str, sound_type: SoundType) {
@@ -117,7 +135,13 @@ impl eframe::App for RefexerApp {
                         self.sound_button(ui, label, sound_type);
                     }
                     ui.add_space(48.0);
-                    ui.add_sized([100.0, 30.0], egui::Button::new("Mutate"));
+
+                    if ui
+                        .add_sized([100.0, 30.0], egui::Button::new("Mutate"))
+                        .clicked()
+                    {
+                        self.mutate_sound();
+                    }
                     self.sound_button(ui, "Randomize", SoundType::Randomize);
                 });
                 ui.vertical(|ui| {
