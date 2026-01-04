@@ -68,14 +68,12 @@ impl SynthPreset {
     }
 
     fn coin(&mut self) -> SynthParams {
-        let mut params = SynthParams {
-            base_freq: 0.4 + self.frnd(0.5),
-            env_attack: 0.0,
-            env_sustain: self.frnd(0.1),
-            env_decay: 0.1 + self.frnd(0.4),
-            env_punch: 0.3 + self.frnd(0.3),
-            ..Default::default()
-        };
+        let mut params = SynthParams::new();
+        params.base_freq = 0.4 + self.frnd(0.5);
+        params.env_attack = 0.0;
+        params.env_sustain = self.frnd(0.1);
+        params.env_decay = 0.1 + self.frnd(0.4);
+        params.env_punch = 0.3 + self.frnd(0.3);
 
         if self.rng.random_bool(0.5) {
             params.arp_speed = 0.5 + self.frnd(0.2);
@@ -85,9 +83,7 @@ impl SynthPreset {
     }
 
     fn shoot(&mut self) -> SynthParams {
-        let mut params = SynthParams {
-            ..Default::default()
-        };
+        let mut params = SynthParams::new();
 
         // I converted the old code to a weighted random extraction
         let waves = [
@@ -139,10 +135,8 @@ impl SynthPreset {
     }
 
     fn explosion(&mut self) -> SynthParams {
-        let mut params = SynthParams {
-            wave_type: WaveType::Noise,
-            ..Default::default()
-        };
+        let mut params = SynthParams::new();
+        params.wave_type = WaveType::Noise;
 
         if self.rng.random::<bool>() {
             params.base_freq = 0.1 + self.frnd(0.4);
@@ -186,12 +180,10 @@ impl SynthPreset {
     }
 
     fn powerup(&mut self) -> SynthParams {
-        let mut params = SynthParams {
-            env_attack: 0.0,
-            env_sustain: self.frnd(0.4),
-            env_decay: 0.1 + self.frnd(0.4),
-            ..Default::default()
-        };
+        let mut params = SynthParams::new();
+        params.env_attack = 0.0;
+        params.env_sustain = self.frnd(0.4);
+        params.env_decay = 0.1 + self.frnd(0.4);
 
         if self.rng.random::<bool>() {
             params.wave_type = WaveType::Sawtooth;
@@ -217,15 +209,13 @@ impl SynthPreset {
 
     fn hit(&mut self) -> SynthParams {
         let waves = [WaveType::Square, WaveType::Sawtooth, WaveType::Noise];
-        let mut params = SynthParams {
-            wave_type: *waves.choose(&mut self.rng).unwrap(),
-            base_freq: 0.2 + self.frnd(0.6),
-            freq_ramp: -0.3 - self.frnd(0.4),
-            env_attack: 0.0,
-            env_sustain: self.frnd(0.1),
-            env_decay: 0.1 + self.frnd(0.2),
-            ..Default::default()
-        };
+        let mut params = SynthParams::new();
+        params.wave_type = *waves.choose(&mut self.rng).unwrap();
+        params.base_freq = 0.2 + self.frnd(0.6);
+        params.freq_ramp = -0.3 - self.frnd(0.4);
+        params.env_attack = 0.0;
+        params.env_sustain = self.frnd(0.1);
+        params.env_decay = 0.1 + self.frnd(0.2);
 
         if matches!(params.wave_type, WaveType::Square) {
             params.duty = self.frnd(0.6);
@@ -239,16 +229,14 @@ impl SynthPreset {
     }
 
     fn jump(&mut self) -> SynthParams {
-        let mut params = SynthParams {
-            wave_type: WaveType::Square,
-            duty: self.frnd(0.6),
-            base_freq: 0.3 + self.frnd(0.3),
-            freq_ramp: 0.1 + self.frnd(0.2),
-            env_attack: 0.0,
-            env_sustain: 0.1 + self.frnd(0.3),
-            env_decay: 0.1 + self.frnd(0.2),
-            ..Default::default()
-        };
+        let mut params = SynthParams::new();
+        params.wave_type = WaveType::Square;
+        params.duty = self.frnd(0.6);
+        params.base_freq = 0.3 + self.frnd(0.3);
+        params.freq_ramp = 0.1 + self.frnd(0.2);
+        params.env_attack = 0.0;
+        params.env_sustain = 0.1 + self.frnd(0.3);
+        params.env_decay = 0.1 + self.frnd(0.2);
 
         if self.rng.random::<bool>() {
             params.hpf_freq = self.frnd(0.3);
@@ -263,15 +251,13 @@ impl SynthPreset {
 
     fn blip(&mut self) -> SynthParams {
         let waves = [WaveType::Square, WaveType::Sawtooth];
-        let mut params = SynthParams {
-            wave_type: *waves.choose(&mut self.rng).unwrap(),
-            base_freq: 0.2 + self.frnd(0.4),
-            env_attack: 0.0,
-            env_sustain: 0.1 + self.frnd(0.1),
-            env_decay: self.frnd(0.2),
-            hpf_freq: 0.1,
-            ..Default::default()
-        };
+        let mut params = SynthParams::new();
+        params.wave_type = *waves.choose(&mut self.rng).unwrap();
+        params.base_freq = 0.2 + self.frnd(0.4);
+        params.env_attack = 0.0;
+        params.env_sustain = 0.1 + self.frnd(0.1);
+        params.env_decay = self.frnd(0.2);
+        params.hpf_freq = 0.1;
 
         if matches!(params.wave_type, WaveType::Square) {
             params.duty = self.frnd(0.6);
@@ -287,10 +273,8 @@ impl SynthPreset {
             WaveType::Sine,
             WaveType::Noise,
         ];
-        let mut params = SynthParams {
-            wave_type: *waves.choose(&mut self.rng).unwrap(),
-            ..Default::default()
-        };
+        let mut params = SynthParams::new();
+        params.wave_type = *waves.choose(&mut self.rng).unwrap();
 
         params.base_freq = (self.frnd(2.0) - 1.0).powf(2.0);
         if self.rng.random::<bool>() {

@@ -1,3 +1,5 @@
+use rand::prelude::*;
+
 #[derive(Default, Clone, Copy)]
 pub enum WaveType {
     #[default]
@@ -7,6 +9,7 @@ pub enum WaveType {
     Noise,
 }
 
+#[derive(Clone, Copy)]
 pub struct SynthParams {
     pub wave_type: WaveType,
     pub base_freq: f32,
@@ -72,4 +75,80 @@ impl Default for SynthParams {
             arp_mod: Default::default(),
         }
     }
+}
+
+impl SynthParams {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn mutate(&mut self, rng: &mut impl Rng) {
+        if rng.random::<bool>() {
+            self.base_freq += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.freq_ramp += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.freq_dramp += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.duty += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.duty_ramp += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.vib_strength += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.vib_speed += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.env_attack += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.env_sustain += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.env_decay += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.env_punch += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.lpf_resonance += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.lpf_freq += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.lpf_ramp += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.hpf_freq += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.hpf_ramp += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.pha_offset += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.pha_ramp += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.repeat_speed += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.arp_speed += frnd(rng, 0.1) - 0.05;
+        }
+        if rng.random::<bool>() {
+            self.arp_mod += frnd(rng, 0.1) - 0.05;
+        }
+    }
+}
+
+fn frnd(rng: &mut impl Rng, range: f32) -> f32 {
+    rng.random::<f32>() * range
 }
