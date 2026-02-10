@@ -3,42 +3,17 @@
 //! A gui for generating retro-style sound effects used in old
 //! video games.
 
-use anyhow::anyhow;
-use cpal::traits::StreamTrait;
 use rand::prelude::*;
-use std::sync::mpsc::{self, Sender};
+use std::sync::mpsc::Sender;
 
 use eframe::egui::{self, Layout, Response, RichText, Slider, vec2};
-use refexer::{
-    sound::stream_setup,
-    synth::{
-        Synth,
-        params::SynthParams,
-        presets::{SoundType, SynthPreset},
-    },
+use refexer::synth::{
+    Synth,
+    params::SynthParams,
+    presets::{SoundType, SynthPreset},
 };
 
-mod plot;
-
-fn main() -> anyhow::Result<()> {
-    let (tx, rx) = mpsc::channel();
-
-    // initialize the synth and the audio stream
-    let (stream, _) = stream_setup(rx)?;
-    stream.play()?;
-
-    let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([640.0, 700.0]),
-        ..Default::default()
-    };
-
-    eframe::run_native(
-        "Refexer - Retro Sound FX Generator",
-        options,
-        Box::new(|_cc| Ok(Box::new(RefexerApp::new(tx)))),
-    )
-    .map_err(|e| anyhow!("Failed to start eframe: {}", e))
-}
+use super::plot;
 
 /// Sound button configuration
 const SOUND_BUTTONS: &[(&str, SoundType)] = &[
@@ -52,7 +27,7 @@ const SOUND_BUTTONS: &[(&str, SoundType)] = &[
 ];
 
 /// Main application state.
-struct RefexerApp {
+pub struct RefexerApp {
     /// Audio synth.
     synth: Synth,
     /// Current parameters
@@ -68,7 +43,7 @@ struct RefexerApp {
 }
 
 impl RefexerApp {
-    fn new(sender: Sender<Vec<f32>>) -> Self {
+    pub fn new(sender: Sender<Vec<f32>>) -> Self {
         let params = SynthParams::default();
         let synth = Synth::new(params);
 
